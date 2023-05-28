@@ -1,0 +1,212 @@
+import pygame
+
+import time
+
+import random
+
+
+pygame.init()
+
+black = ("black")
+
+display = pygame.display.set_mode((1000,800))
+
+pygame.display.set_caption("Toy Story")
+
+sidimg = pygame.image.load("sid.png")
+
+sidimg = pygame.transform.scale(sidimg, (180, 200))
+
+background1 = pygame.image.load("cld.jpg")
+
+background1 = pygame.transform.scale(background1, (1100, 1600))
+
+woody = pygame.image.load("woody.png")
+
+woody = pygame.transform.scale(woody, (140, 180))
+
+BL = pygame.image.load("BL.png")
+
+BL = pygame.transform.scale(BL, (140, 180))
+
+Alien = pygame.image.load("alien.png")
+
+Alien = pygame.transform.scale(Alien, (210, 170))
+
+BnD = pygame.image.load("B&D1.png")
+
+BnD = pygame.transform.scale(BnD, (210, 170))
+
+lotso = pygame.image.load("lotso.png")
+
+lotso = pygame.transform.scale(lotso, (210, 190))
+
+
+sid_width = 20
+
+
+
+
+def toystoys(toys_startx, toys_starty, toys):
+
+   if toys==0:
+
+       toys_come = woody
+
+   if toys==1:
+
+       toys_come = BL
+
+   if toys==2:
+
+       toys_come = Alien
+
+   if toys==3:
+
+       toys_come = BnD
+
+   if toys==4:
+
+       toys_come = lotso
+
+   display.blit(toys_come, (toys_startx, toys_starty))
+
+
+def boun():
+
+   message_display("Out of bounds")
+
+
+def crash():
+
+   message_display("Sid has encountered the toys 😢 ")
+
+
+def message_display(text):
+
+   largetext = pygame.font.Font("freesansbold.ttf", 40)
+
+   textsurf, textrect = text_object(text, largetext)
+
+   textrect.center = ((470), (410))
+
+   display.blit(textsurf, textrect)
+
+   pygame.display.update()
+
+   time.sleep(3)
+
+   loop()
+
+
+def text_object(text, font):
+
+   textsurface = font.render(text, True, black)
+
+   return textsurface, textsurface.get_rect()
+
+
+def background():
+
+   display.blit(background1, (0,0))
+
+
+def sid(x,y):
+
+   display.blit(sidimg, (x,y))
+
+
+def loop():
+
+   x = 400
+
+   y = 600
+
+   x_change = 0
+
+   y_change = 0
+
+   toys_speed = 1
+
+   toys = 0
+
+   toys_startx = random.randrange(70,(700-sid_width))
+
+   toys_starty = -200
+
+   toys_width = 40
+
+   toys_height = 42
+
+
+   bumped = False
+
+   while not bumped:
+
+       for event in pygame.event.get():
+
+           if event.type == pygame.QUIT:
+
+               bumped = True
+
+               pygame.quit()
+
+               quit()
+
+           if event.type == pygame.KEYDOWN:
+
+               if event.key == pygame.K_a:
+
+                   x_change =-3
+
+               if event.key == pygame.K_d:
+
+                   x_change =3
+
+           if event.type == pygame.KEYUP:
+
+               x_change = 0
+
+       x+=x_change
+
+
+       background()
+
+       toys_starty-=(toys_speed/4)
+
+       toystoys(toys_startx, toys_starty, toys)
+
+       toys_starty+= toys_speed
+
+       sid(x,y)
+
+
+       if x < -30 or x > 890-sid_width:
+
+           bumped = True
+
+           boun()
+
+       if toys_starty > 700:
+
+           toys_starty = 0-toys_height
+
+           toys_startx=random.randrange(130,(1000-300))
+
+           toys= random.randrange(0,5)
+
+
+       if y<toys_starty+toys_height:
+
+           if x > toys_startx and x < toys_startx + toys_width or x + sid_width > toys_startx and x + sid_width < toys_startx + toys_width:
+
+               crash()
+
+       pygame.display.update()
+
+
+loop()
+
+pygame.quit()
+
+quit()
