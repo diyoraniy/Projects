@@ -1,0 +1,213 @@
+import pygame as pyg
+from random import randint as R
+from time import sleep
+
+pyg.display.set_caption('AI TIC TAC TOE')
+class GUI():
+    pyg.init()
+    w = w = pyg.display.set_mode((640, 480))
+    ws = 640, 480  # window size
+    clock = pyg.time.Clock()
+    fonts = pyg.font.get_fonts()
+    font1 = pyg.font.SysFont(fonts[0], 50, False, False)
+    font2 = pyg.font.SysFont(fonts[0], 70, True, False)
+    font3 = pyg.font.SysFont(fonts[0], 20, True, False)
+
+    def fill_bg(self, color=(175, 175, 135)):
+        self.w.fill(color)
+
+    def upd(self):
+        pyg.event.pump()
+        pyg.display.update()
+
+
+class Game(GUI):
+    score = [0, 0]
+    gb = ['', '', '', '', '', '', '', '', '']
+    turn = 'X'
+    r_l = []
+    bgs = 0
+    game_con = True
+    rows = [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]
+    dct_l = []
+
+    def change_turn(self):
+        if self.turn == 'X':
+            self.turn = 'O'
+        else:
+            self.turn = 'X'
+        # print(self.turn)
+
+    def restart(self):
+        self.gb = ['', '', '', '', '', '', '', '', '']
+        self.r_l = []
+        self.bgs = 0
+        self.turn = 'X'
+        self.game_con = True
+
+    def check_game(self):
+        gb = self.gb
+        self.dct_l = []
+        for row in self.rows:
+            xs = 0
+            os = 0
+            empty = []
+            for r in row:
+                if gb[r] == 'X':
+                    xs += 1
+                elif gb[r] == 'O':
+                    os += 1
+                else:
+                    empty.append(r)
+            if xs == 3:
+                self.score[1] += 1
+                self.game_con = False
+                return
+            elif os == 3:
+                self.score[0] += 1
+                self.game_con = False
+                return
+            self.dct_l.append({'xs': xs, 'os': os, 'empty': empty})
+
+    def draw_gb(self):
+        self.gbs = s = min(self.ws[0] // 2, 500)
+        self.r_l = []
+        bg = pyg.Rect(self.ws[0] // 2 - s // 2, 100, s, s)
+        score = self.font2.render(str(self.score), 10, True)
+        ts = score.get_size()
+        self.w.blit(score, (bg.left + (s // 2 - ts[0] // 2), bg.top - ts[1]))
+        rs = s // 3 - 15
+        pyg.draw.rect(self.w, 'black', bg)
+        txt = self.font3.render('Reset', 10, 'white')
+        ts = txt.get_size()
+        self.reset = pyg.Rect(bg.left - 120, bg.top + (s // 2 - 25), ts[0] + 20, 50)
+        pyg.draw.rect(self.w, 'black', self.reset)
+        self.w.blit(txt, (self.reset.left + (ts[0] // 2) - 20, self.reset.top + ts[1] // 2))
+        self.r_l.append(pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left, bg.top, rs, rs)))  # 0
+        self.r_l.append(pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 3 + 7), bg.top, rs, rs)))  # 1
+        self.r_l.append(pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 1.5 + 15), bg.top, rs, rs)))  # 2
+        self.r_l.append(pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left, bg.top + (s // 3 + 7), rs, rs)))  # 3
+        self.r_l.append(
+            pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 3 + 7), bg.top + (s // 3 + 7), rs, rs)))  # 4
+        self.r_l.append(
+            pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 1.5 + 15), bg.top + (s // 3 + 7), rs, rs)))  # 5
+        self.r_l.append(pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left, bg.top + (s // 1.5 + 15), rs, rs)))  # 6
+        self.r_l.append(
+            pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 3 + 7), bg.top + (s // 1.5 + 15), rs, rs)))  # 7
+        self.r_l.append(
+            pyg.draw.rect(self.w, 'white', pyg.Rect(bg.left + (s // 1.5 + 15), bg.top + (s // 1.5 + 15), rs, rs)))  # 8
+        i = 0
+        for r in self.r_l:
+            txt = self.font1.render(self.gb[i], 10, True)
+            ts = txt.get_size()
+            pos = r.left + (ts[0] // 2) + 15, r.top + ts[1] // 2 - 15
+            self.w.blit(txt, pos)
+            if i == 8:
+                break
+            i += 1
+        if self.game_con == True:
+            self.check_game()
+
+
+
+class AI(Game):
+    def calc_best_move(self):
+        gb = self.gb  # get the game board
+        e_l = []  # list to store empty spaces
+        prio1 = []  # priority 1 AI choice
+        prio2 = []  # priority 2 AI choice
+        prio3 = []  # priority 3 AI choice
+        t = self.turn  # get AI turn
+        if '' not in gb: return  # exit if the gameboard is full
+        for d in self.dct_l:  # loop through row conditions list
+            os = d.get('os')  # get # of os in each row
+            xs = d.get('xs')  # get # of xs in each row
+            empty = d.get('empty')  # get # of empty spaces in each row
+            if len(empty) == 0:
+                print('row filled')
+                continue
+            elif t == 'O' and os == 2 and len(empty) > 0:
+                prio1.append(empty[0])
+                print('prio1')
+                break
+            elif t == 'X' and xs == 2 and len(empty) > 0:
+                print('prio1')
+                prio1.append(empty[0])
+                break
+            elif os == 2 or xs == 2 and len(empty) == 1:
+                print('prio2')
+                prio2.append(empty[0])
+            elif t == 'O' and os == 1 and len(empty) > 1:
+                print('prio3')
+                prio3.append(empty[R(0, 1)])
+            elif t == 'X' and xs == 1 and len(empty) > 1:
+                print('prio3')
+                prio3.append(empty[R(0, 1)])
+            e_l += empty
+        if len(prio1) > 0:
+            gb[prio1[0]] = t
+        elif len(prio2) > 0:
+            gb[prio2[0]] = t
+        elif len(prio3) > 0:
+            gb[prio3[0]] = t
+        elif gb[4] == '':  # take center if open
+            gb[4] = t
+        elif len(e_l) > 0:
+            print('move')
+            gb[e_l[R(0, len(e_l) - 1)]] = t
+
+        self.gb = gb
+        self.change_turn()
+        sleep(0.5)
+
+
+class App(AI):
+
+    def update(self):
+        self.fill_bg()
+        self.draw_gb()
+        self.upd()
+
+    def mainloop(self):
+        l = True
+        m_d = False
+        while l:
+            for e in pyg.event.get():
+                if e.type == pyg.QUIT:
+                    l = False
+                    break
+            self.mpr = mpr = pyg.mouse.get_pressed()
+            self.pr = pr = pyg.key.get_pressed()
+            if mpr[0] and m_d == False:
+                m_d == True
+                mp = pyg.mouse.get_pos()
+                if self.reset.collidepoint(mp):
+                    self.restart()
+                else:
+                    ss = self.bgs // 8
+                    for r in self.r_l:
+                        if r.collidepoint(mp) and self.game_con == True:
+                            index = self.r_l.index(r)
+                            if self.gb[index] == '':
+                                self.gb[index] = self.turn
+                                print(self.gb)
+                                self.change_turn()
+                                self.update()
+                                sleep(0.5)
+                                self.calc_best_move()
+                                break
+
+            elif (not mpr[0]) and m_d == True:
+                m_d = False
+            self.update()
+            self.clock.tick(30)
+        pyg.quit()
+
+    def __init__(self):
+        self.update()
+        pass
+
+
+app = App()
+app.mainloop()
+print(app.score)
