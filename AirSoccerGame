@@ -1,0 +1,86 @@
+import pygame as pyg
+from random import randint as R
+from pygame import mixer
+import sys
+
+pyg.init()
+mixer.init()
+mixer.music.load('Peaches.mp3')
+mixer.music.play()
+mixer.music.set_volume(1)
+
+
+fonts = pyg.font.get_fonts()
+font = pyg.font.SysFont(fonts[0], 50, True, False)
+
+
+screen = pyg.display.set_mode((1000, 600))
+screen_rect = screen.get_rect()
+x, y = screen_rect.size
+
+pyg.display.set_caption('Foosball/Air Hockey Mixed Game')
+bg = pyg.image.load('grass.jpg')
+bg = pyg.transform.scale(bg, (1000, 600))
+paddle = pyg.image.load('paddle.png')
+paddle = pyg.transform.scale(paddle, (105, 61))
+puck = pyg.image.load('download (58).png')
+puck = pyg.transform.scale(puck, (30, 30))
+
+left_paddle = paddle.get_rect(midleft=(75, y // 2))
+right_paddle = paddle.get_rect(midright=(x - 75, y // 2))
+puck_r = puck.get_rect(center=screen_rect.center)
+
+max_speed = 12
+speed = [max_speed, max_speed]
+
+goal_1 = pyg.Rect(0, y // 2 - 50, 50, 100)
+goal_2 = pyg.Rect(x - 50, y // 2 - 50, 50, 100)
+
+score = [0, 0]
+point = 0
+
+while True:
+    screen.fill('black')
+    for e in pyg.event.get():
+        if e.type == pyg.QUIT:
+            pyg.quit()
+            sys.exit()
+    screen.blit(bg, (0, 0))
+    mp = pyg.mouse.get_pos()
+
+    if puck_r.colliderect(goal_1):
+        score[1] += 1
+        puck_r.center = screen_rect.center
+    elif puck_r.colliderect(goal_2):
+        score[0] += 1
+        puck_r.center = screen_rect.center
+
+    if puck_r.colliderect(left_paddle):
+        speed = [max_speed + R(-3, 3), max_speed * R(-1, 1) + R(-3, 3)]
+    elif puck_r.colliderect(right_paddle):
+        speed = [-max_speed + R(-3, 3), max_speed * R(-1, 1) + R(-3, 3)]
+
+    if puck_r.top < 0 or puck_r.bottom > y:
+        speed[1] = -speed[1]
+    if puck_r.left <= 0 or puck_r.right >= x:
+        speed[0] = -speed[0]
+
+    if puck_r.center[1] < left_paddle.center[1] - max_speed:
+        left_paddle = left_paddle.move(0, -max_speed // 2)
+    elif puck_r.center[1] > left_paddle.center[1] + max_speed:
+        left_paddle = left_paddle.move(0, max_speed // 2)
+
+    puck_r = puck_r.move(speed)  
+    right_paddle.center = (right_paddle.center[0], mp[1])
+
+    screen.blit(paddle, left_paddle)
+    screen.blit(paddle, right_paddle)
+    screen.blit(puck, puck_r)
+
+    txt = font.render(str(score), 0, 'black')
+    tc = txt.get_rect().center 
+    screen.blit(txt, (x // 2 - tc[0] + 10, 10))
+
+    pyg.display.update()
+    pyg.event.pump()
+    pyg.time.delay(30)
